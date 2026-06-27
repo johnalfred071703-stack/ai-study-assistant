@@ -42,6 +42,7 @@ export default function ReviewerPage() {
       })
       .catch(() => setError('Failed to generate. Try again.'))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, doc, quizSet, flashcardSet]);
 
   const handleTabClick = (key) => {
@@ -77,13 +78,13 @@ export default function ReviewerPage() {
         padding: '0 24px', height: 52, borderBottom: '0.5px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <i className="ti ti-file-type-pdf" style={{ fontSize: 16, color: '#D85A30' }} aria-hidden="true" />
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>{doc.filename}</span>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{doc.pages} pages</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <i className="ti ti-file-type-pdf" style={{ fontSize: 16, color: '#D85A30', flexShrink: 0 }} aria-hidden="true" />
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.filename}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>{doc.pages} pages</span>
         </div>
         <button onClick={() => navigate('/')} style={{
-          padding: '5px 14px', borderRadius: 'var(--radius-sm)',
+          padding: '5px 14px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
           background: 'var(--accent-dim)', color: 'var(--accent)',
           border: '0.5px solid var(--accent-border)', fontSize: 12, cursor: 'pointer',
         }}>
@@ -95,12 +96,13 @@ export default function ReviewerPage() {
       <div style={{
         display: 'flex', gap: 4, padding: '12px 24px 0',
         borderBottom: '0.5px solid var(--border)', flexShrink: 0,
+        overflowX: 'auto',
       }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => handleTabClick(t.key)} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '7px 14px', fontSize: 12, cursor: 'pointer',
-            background: 'transparent', border: 'none',
+            background: 'transparent', border: 'none', flexShrink: 0,
             borderBottom: activeTab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
             color: activeTab === t.key ? 'var(--accent)' : 'var(--text-secondary)',
             transition: 'color 0.12s', marginBottom: -1,
@@ -157,8 +159,6 @@ function FlashcardsView({ data, onNextSet, setIndex }) {
   const [status, setStatus] = useState({});
   const cards = data.cards || [];
   const card = cards[index];
-  const allDone = cards.every((_, i) => status[i] === 'got' || status[i] === 'learning');
-  const stillLearning = cards.filter((_, i) => status[i] === 'learning');
   const allGot = cards.every((_, i) => status[i] === 'got');
 
   const handleStatus = (s) => {
@@ -189,9 +189,7 @@ function FlashcardsView({ data, onNextSet, setIndex }) {
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', paddingTop: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-          Set {setIndex + 1} · {index + 1} / {cards.length}
-        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Set {setIndex + 1} · {index + 1} / {cards.length}</div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           {Object.values(status).filter(s => s === 'got').length} got it · {Object.values(status).filter(s => s === 'learning').length} still learning
         </div>
@@ -220,12 +218,14 @@ function FlashcardsView({ data, onNextSet, setIndex }) {
           <button onClick={() => handleStatus('learning')} style={{
             padding: '8px 20px', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer',
             background: 'rgba(226,75,74,0.08)', color: '#F09595', border: '0.5px solid rgba(226,75,74,0.3)',
+            minHeight: 44,
           }}>
             <i className="ti ti-refresh" style={{ fontSize: 13, marginRight: 5 }} /> Still learning
           </button>
           <button onClick={() => handleStatus('got')} style={{
             padding: '8px 20px', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer',
             background: 'rgba(29,158,117,0.1)', color: '#5DCAA5', border: '0.5px solid rgba(29,158,117,0.3)',
+            minHeight: 44,
           }}>
             <i className="ti ti-check" style={{ fontSize: 13, marginRight: 5 }} /> Got it
           </button>
@@ -241,13 +241,13 @@ function FlashcardsView({ data, onNextSet, setIndex }) {
       <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16 }}>
         <button onClick={() => { setIndex2(i => Math.max(0, i - 1)); setFlipped(false); }} style={{
           padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer',
-          background: 'transparent', color: 'var(--text-secondary)', border: '0.5px solid var(--border)',
+          background: 'transparent', color: 'var(--text-secondary)', border: '0.5px solid var(--border)', minHeight: 44,
         }}>
           <i className="ti ti-arrow-left" style={{ fontSize: 13 }} /> Prev
         </button>
         <button onClick={() => { setIndex2(i => Math.min(cards.length - 1, i + 1)); setFlipped(false); }} style={{
           padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer',
-          background: 'transparent', color: 'var(--text-secondary)', border: '0.5px solid var(--border)',
+          background: 'transparent', color: 'var(--text-secondary)', border: '0.5px solid var(--border)', minHeight: 44,
         }}>
           Next <i className="ti ti-arrow-right" style={{ fontSize: 13 }} />
         </button>
@@ -317,6 +317,7 @@ function QuizView({ data, onNextSet, currentSet }) {
               <button onClick={() => handleUnderstood(wi)} style={{
                 padding: '6px 14px', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer',
                 background: 'var(--accent-dim)', color: 'var(--accent)', border: '0.5px solid var(--accent-border)',
+                minHeight: 44,
               }}>I understand now</button>
             ) : (
               <div style={{ fontSize: 11, color: '#5DCAA5' }}><i className="ti ti-check" /> Understood</div>
@@ -340,6 +341,7 @@ function QuizView({ data, onNextSet, currentSet }) {
           <button onClick={onNextSet} style={{
             padding: '8px 24px', borderRadius: 'var(--radius-sm)', fontSize: 13, cursor: 'pointer',
             background: 'var(--accent-dim)', color: 'var(--accent)', border: '0.5px solid var(--accent-border)',
+            minHeight: 44,
           }}>
             Next set <i className="ti ti-arrow-right" style={{ fontSize: 13 }} />
           </button>
@@ -366,7 +368,7 @@ function QuizView({ data, onNextSet, currentSet }) {
                   padding: '11px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, cursor: 'pointer',
                   border: `0.5px solid ${sel === i ? 'var(--accent-border)' : 'var(--border)'}`,
                   color: sel === i ? 'var(--accent)' : 'var(--text-secondary)',
-                  background: 'var(--bg-card)', transition: 'all 0.12s',
+                  background: 'var(--bg-card)', transition: 'all 0.12s', minHeight: 44,
                 }}>{c}</div>
               ))}
             </div>
@@ -378,6 +380,7 @@ function QuizView({ data, onNextSet, currentSet }) {
         <button onClick={handleSubmit} style={{
           marginTop: 8, padding: '8px 24px', borderRadius: 'var(--radius-sm)', fontSize: 13, cursor: 'pointer',
           background: 'var(--accent-dim)', color: 'var(--accent)', border: '0.5px solid var(--accent-border)',
+          minHeight: 44,
         }}>
           Submit answers
         </button>
@@ -436,6 +439,7 @@ function BlanksView({ data }) {
                 marginTop: 10, padding: '4px 12px', borderRadius: 'var(--radius-sm)',
                 background: 'var(--accent-dim)', color: 'var(--accent)',
                 border: '0.5px solid var(--accent-border)', fontSize: 11, cursor: 'pointer',
+                minHeight: 44,
               }}>Check</button>
             )}
           </div>
