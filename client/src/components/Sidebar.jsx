@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { getDocuments, getDocument } from '../services/api';
 
 const nav = [
   { to: '/', icon: 'ti-home', label: 'Home' },
@@ -23,8 +24,7 @@ const NavItem = ({ to, icon, label, onClick }) => (
     borderRadius: 'var(--radius-sm)', fontSize: 13, textDecoration: 'none',
     color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
     background: isActive ? 'var(--accent-dim)' : 'transparent',
-    transition: 'background 0.12s, color 0.12s',
-    minHeight: 44,
+    transition: 'background 0.12s, color 0.12s', minHeight: 44,
   })}>
     <i className={`ti ${icon}`} style={{ fontSize: 16, flexShrink: 0 }} aria-hidden="true" />
     {label}
@@ -33,11 +33,32 @@ const NavItem = ({ to, icon, label, onClick }) => (
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const activeTab = location.pathname.split('/').pop();
   const isReviewer = location.pathname.startsWith('/reviewer');
 
   const close = () => setOpen(false);
+
+  const handleModeClick = async (key) => {
+    close();
+    if (isReviewer) {
+      window.dispatchEvent(new CustomEvent('switchTab', { detail: key }));
+      return;
+    }
+    try {
+      const res = await getDocuments();
+      if (res.data.length > 0) {
+        const latest = res.data[0];
+        const docRes = await getDocument(latest._id);
+        navigate(`/reviewer/${key}`, { state: { doc: docRes.data } });
+      } else {
+        navigate('/upload');
+      }
+    } catch {
+      navigate('/upload');
+    }
+  };
 
   const sidebarContent = (
     <>
@@ -46,7 +67,7 @@ export default function Sidebar() {
           <div style={{ fontSize: 14, fontWeight: 500, color: '#e8e6ff' }}>StudyAI</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>AI document reviewer</div>
         </div>
-        <button onClick={close} style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, padding: 4 }} className="sidebar-close">
+        <button onClick={close} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, padding: 4, display: 'none' }} className="sidebar-close">
           <i className="ti ti-x" aria-label="Close menu" />
         </button>
       </div>
@@ -57,21 +78,17 @@ export default function Sidebar() {
 
         <div style={{ padding: '16px 16px 6px', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Review modes</div>
         {modes.map(m => (
-          <div key={m.key} style={{
+          <div key={m.key} onClick={() => handleModeClick(m.key)} style={{
             display: 'flex', alignItems: 'center', gap: 9,
             padding: '10px 12px', margin: '1px 6px', minHeight: 44,
             borderRadius: 'var(--radius-sm)', fontSize: 13,
             color: isReviewer && activeTab === m.key ? 'var(--accent)' : 'var(--text-secondary)',
             background: isReviewer && activeTab === m.key ? 'var(--accent-dim)' : 'transparent',
-            cursor: isReviewer ? 'pointer' : 'not-allowed',
-            opacity: isReviewer ? 1 : 0.4,
+            cursor: 'pointer',
             transition: 'background 0.12s, color 0.12s',
           }}
-            onClick={() => {
-              if (!isReviewer) return;
-              window.dispatchEvent(new CustomEvent('switchTab', { detail: m.key }));
-              close();
-            }}
+            onMouseEnter={e => { if (!(isReviewer && activeTab === m.key)) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { if (!(isReviewer && activeTab === m.key)) e.currentTarget.style.background = 'transparent'; }}
           >
             <i className={`ti ${m.icon}`} style={{ fontSize: 16, flexShrink: 0 }} aria-hidden="true" />
             {m.label}
@@ -100,7 +117,6 @@ export default function Sidebar() {
         }
       `}</style>
 
-      {/* Desktop sidebar */}
       <div className="sidebar-desktop" style={{
         width: 210, background: 'var(--bg-surface)',
         borderRight: '0.5px solid var(--border)',
@@ -109,12 +125,10 @@ export default function Sidebar() {
         {sidebarContent}
       </div>
 
-      {/* Mobile overlay */}
       <div className="sidebar-overlay" onClick={close} style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40,
       }} />
 
-      {/* Mobile drawer */}
       <div className="sidebar-drawer" style={{
         position: 'fixed', top: 0, left: 0, bottom: 0, width: 240,
         background: 'var(--bg-surface)', borderRight: '0.5px solid var(--border)',
@@ -124,7 +138,6 @@ export default function Sidebar() {
         {sidebarContent}
       </div>
 
-      {/* Mobile top header */}
       <div className="sidebar-mobile-header" style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 52,
         background: 'var(--bg-surface)', borderBottom: '0.5px solid var(--border)',
